@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+Thumbs.db
+.netlify/
+*.log
+
+# Redundant upload archive — contains the internal investor brief (PDF).
+# Excluded so it is not published on the public site / repo.
+uploads/
