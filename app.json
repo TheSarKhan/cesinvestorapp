@@ -37,16 +37,27 @@
       [
         "expo-build-properties",
         {
-          "android": { "usesCleartextTraffic": true }
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ],
       [
         "expo-notifications",
-        { "color": "#15A34A" }
+        {
+          "color": "#15A34A"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b9383aa9-ad1f-4881-adbd-3507d940227c"
+      }
+    },
+    "owner": "sarkhanvibes"
   }
 }
