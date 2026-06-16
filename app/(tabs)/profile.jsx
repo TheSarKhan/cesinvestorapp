@@ -1,7 +1,16 @@
 import { useState } from 'react';
-import { ScrollView, View, Text, TextInput, RefreshControl } from 'react-native';
+import { ScrollView, View, Text, TextInput, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, Building2, Lock, CheckCircle2, AlertCircle } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import {
+  LogOut,
+  Building2,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react-native';
 import { ScreenHeader, Card, InfoRow, Button, Skeleton } from '../../src/components';
 import { useProfile, useChangePassword } from '../../src/hooks/usePortal';
 import { useAuthStore } from '../../src/store/authStore';
@@ -76,7 +85,7 @@ export default function Profile() {
           )}
 
           {/* Şifrə dəyişmə */}
-          <ChangePasswordCard />
+          <ChangePasswordCard email={me?.accountEmail} />
 
           <Button
             variant="danger"
@@ -93,8 +102,10 @@ export default function Profile() {
   );
 }
 
-function ChangePasswordCard() {
+function ChangePasswordCard({ email }) {
+  const router = useRouter();
   const mutation = useChangePassword();
+  const [open, setOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -129,33 +140,60 @@ function ChangePasswordCard() {
   const canSubmit =
     oldPassword.length > 0 && newPassword.length > 0 && confirm.length > 0 && !mutation.isPending;
 
+  const toggle = () => {
+    setOpen((v) => !v);
+    setError('');
+    setDone(false);
+  };
+
   return (
     <Card className="gap-3">
-      <View className="flex-row items-center gap-2">
+      <Pressable onPress={toggle} className="flex-row items-center gap-2 py-0.5">
         <Lock size={18} color={colors.ink70} />
-        <Text className="font-bold text-[15px] text-ink">Şifrəni dəyiş</Text>
-      </View>
+        <Text className="flex-1 font-bold text-[15px] text-ink">Şifrəni yenilə</Text>
+        {open ? (
+          <ChevronUp size={18} color={colors.ink70} />
+        ) : (
+          <ChevronDown size={18} color={colors.ink70} />
+        )}
+      </Pressable>
 
-      <PassInput value={oldPassword} onChangeText={setOldPassword} placeholder="Köhnə şifrə" />
-      <PassInput value={newPassword} onChangeText={setNewPassword} placeholder="Yeni şifrə (min 8)" />
-      <PassInput value={confirm} onChangeText={setConfirm} placeholder="Yeni şifrəni təkrarla" />
+      {open && (
+        <>
+          <PassInput value={oldPassword} onChangeText={setOldPassword} placeholder="Köhnə şifrə" />
+          <PassInput value={newPassword} onChangeText={setNewPassword} placeholder="Yeni şifrə (min 8)" />
+          <PassInput value={confirm} onChangeText={setConfirm} placeholder="Yeni şifrəni təkrarla" />
 
-      {!!error && (
-        <View className="flex-row items-center gap-1.5">
-          <AlertCircle size={14} color={colors.red} />
-          <Text className="font-semibold text-[12.5px] text-red">{error}</Text>
-        </View>
+          {!!error && (
+            <View className="flex-row items-center gap-1.5">
+              <AlertCircle size={14} color={colors.red} />
+              <Text className="font-semibold text-[12.5px] text-red">{error}</Text>
+            </View>
+          )}
+          {done && (
+            <View className="flex-row items-center gap-1.5">
+              <CheckCircle2 size={14} color={colors.green} />
+              <Text className="font-semibold text-[12.5px] text-green">Şifrə dəyişdirildi.</Text>
+            </View>
+          )}
+
+          <Button full sm loading={mutation.isPending} disabled={!canSubmit} onPress={submit}>
+            Yadda saxla
+          </Button>
+
+          <Pressable
+            hitSlop={8}
+            onPress={() =>
+              router.push({ pathname: '/forgot-password', params: email ? { email } : {} })
+            }
+            className="self-center"
+          >
+            <Text className="font-semibold text-[13px] text-brand">
+              Köhnə şifrəni unutmusan?
+            </Text>
+          </Pressable>
+        </>
       )}
-      {done && (
-        <View className="flex-row items-center gap-1.5">
-          <CheckCircle2 size={14} color={colors.green} />
-          <Text className="font-semibold text-[12.5px] text-green">Şifrə dəyişdirildi.</Text>
-        </View>
-      )}
-
-      <Button full sm loading={mutation.isPending} disabled={!canSubmit} onPress={submit}>
-        Yadda saxla
-      </Button>
     </Card>
   );
 }

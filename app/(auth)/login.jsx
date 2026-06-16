@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Truck,
@@ -26,6 +27,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { extractErrorMessage } from '../../src/api/client';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const login = useAuthStore((s) => s.login);
 
   const [email, setEmail] = useState('');
@@ -142,6 +144,16 @@ export default function LoginScreen() {
                 </Pressable>
               </Field>
             </View>
+
+            <Pressable
+              hitSlop={8}
+              onPress={() =>
+                router.push({ pathname: '/forgot-password', params: { email: email.trim() } })
+              }
+              className="mt-3 self-end"
+            >
+              <Text className="font-semibold text-[13px] text-brand">Şifrəni unutdum?</Text>
+            </Pressable>
 
             {!!error && (
               <View className="mt-2.5 flex-row items-center gap-1.5">

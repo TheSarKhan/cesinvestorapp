@@ -32,3 +32,26 @@ export async function getMe() {
   const { data } = await apiClient.get('/portal/me');
   return data.data;
 }
+
+// ───── Şifrəmi unutdum (OTP axını) — public, bare axios ─────────────────────
+
+// 1) Email-ə 6 rəqəmli OTP göndər
+export async function forgotPassword(email) {
+  const { data } = await axios.post(`${BASE_URL}/investor-auth/forgot-password`, { email });
+  return data;
+}
+
+// 2) OTP-ni doğrula → { verificationToken, message }
+export async function verifyOtp(email, otp) {
+  const { data } = await axios.post(`${BASE_URL}/investor-auth/verify-otp`, { email, otp });
+  return data.data;
+}
+
+// 3) Verification token ilə yeni şifrə təyin et
+export async function resetPassword(verificationToken, newPassword) {
+  const { data } = await axios.post(`${BASE_URL}/investor-auth/reset-password`, {
+    verificationToken,
+    newPassword,
+  });
+  return data;
+}
