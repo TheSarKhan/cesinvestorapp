@@ -19,7 +19,11 @@ const MIME_EXT = {
 function safeFileName(name, id, fileType) {
   let base = (name || `sened-${id}`).replace(/[^\w.\-]+/g, '_');
   const hasExt = /\.[a-z0-9]{2,5}$/i.test(base);
-  if (!hasExt && fileType && MIME_EXT[fileType]) base += MIME_EXT[fileType];
+  if (!hasExt && fileType) {
+    if (MIME_EXT[fileType]) base += MIME_EXT[fileType];
+    // Sənəd mərkəzi: fileType artıq uzantıdır (PDF, JPG, DOCX...)
+    else if (/^[a-z0-9]{2,5}$/i.test(fileType)) base += '.' + fileType.toLowerCase();
+  }
   return base;
 }
 
@@ -55,6 +59,12 @@ export async function getInvoices() {
 
 export async function getPayments() {
   const { data } = await apiClient.get('/portal/payments');
+  return data.data;
+}
+
+// Konkret qaimə üzrə edilmiş ödənişlər
+export async function getInvoicePayments(id) {
+  const { data } = await apiClient.get(`/portal/invoices/${id}/payments`);
   return data.data;
 }
 
@@ -109,16 +119,18 @@ export async function markAllNotificationsRead() {
 }
 
 // Sənədi keşə endir (auth header ilə — downloadAsync interceptor-dan kənardır).
+// Sənəd mərkəzi: hər sənəd sourceType + sourceId ilə identifikasiya olunur.
 // Qaytarır: { uri, mimeType }. Sonra expo-sharing ilə açılır.
-export async function downloadDocumentToCache(documentId, fileName, fileType) {
+export async function downloadDocumentToCache(sourceType, sourceId, fileName, fileType) {
   const token = await ensureAccessToken();
-  const url = `${config.apiBaseUrl}${config.apiPrefix}/portal/documents/${documentId}/download`;
-  const target = FileSystem.cacheDirectory + safeFileName(fileName, documentId, fileType);
+  const url = `${config.apiBaseUrl}${config.apiPrefix}/portal/documents/${sourceType}/${sourceId}/download`;
+  const target = FileSystem.cacheDirectory + safeFileName(fileName, sourceId, fileType);
   const res = await FileSystem.downloadAsync(url, target, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (res.status !== 200) {
     throw new Error(`Fayl endirilə bilmədi (${res.status})`);
   }
-  return { uri: res.uri, mimeType: fileType || res.mimeType };
+  // fileType artıq uzantıdır (PDF...), MIME deyil — serverin content-type-ı üstünlük təşkil edir
+  return { uri: res.uri, mimeType: res.headers?.['Content-Type'] || res.mimeType };
 }

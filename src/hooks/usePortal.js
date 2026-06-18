@@ -9,6 +9,7 @@ export const qk = {
   equipmentHistory: (id) => ['portal', 'equipment', String(id), 'history'],
   equipmentEarnings: (id) => ['portal', 'equipment', String(id), 'earnings'],
   invoices: ['portal', 'invoices'],
+  invoicePayments: (id) => ['portal', 'invoices', String(id), 'payments'],
   payments: ['portal', 'payments'],
   documents: ['portal', 'documents'],
   profile: ['portal', 'me'],
@@ -45,6 +46,13 @@ export const useEquipmentEarnings = (id) =>
 
 export const useInvoices = () =>
   useQuery({ queryKey: qk.invoices, queryFn: portal.getInvoices });
+
+export const useInvoicePayments = (id) =>
+  useQuery({
+    queryKey: qk.invoicePayments(id),
+    queryFn: () => portal.getInvoicePayments(id),
+    enabled: id != null,
+  });
 
 export const usePayments = () =>
   useQuery({ queryKey: qk.payments, queryFn: portal.getPayments });

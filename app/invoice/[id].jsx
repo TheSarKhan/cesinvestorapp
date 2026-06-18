@@ -1,7 +1,7 @@
 import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Receipt } from 'lucide-react-native';
+import { Receipt, Wallet } from 'lucide-react-native';
 import {
   ScreenHeader,
   Card,
@@ -11,7 +11,7 @@ import {
   ErrorState,
   Skeleton,
 } from '../../src/components';
-import { useInvoices } from '../../src/hooks/usePortal';
+import { useInvoices, useInvoicePayments } from '../../src/hooks/usePortal';
 import { azn, azDate } from '../../src/utils/format';
 import { colors } from '../../src/theme/colors';
 
@@ -20,6 +20,8 @@ export default function InvoiceDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { data, isLoading, isError, error, refetch } = useInvoices();
+  const payQ = useInvoicePayments(id);
+  const payments = payQ.data ?? [];
 
   const inv = (data ?? []).find((i) => String(i.id) === String(id));
 
@@ -76,6 +78,38 @@ export default function InvoiceDetail() {
                   <Text className="font-bold text-[22px] text-brand">{azn(inv.amount)}</Text>
                 </View>
               </Card>
+
+              {/* Bu qaimə üzrə edilmiş ödənişlər */}
+              <View className="mt-5">
+                <Text className="mb-2.5 text-xs font-bold uppercase text-muted">Ödənişlər</Text>
+                {payQ.isLoading ? (
+                  <Skeleton height={72} radius={18} />
+                ) : payQ.isError ? (
+                  <ErrorState message={payQ.error?.message} onRetry={payQ.refetch} />
+                ) : payments.length === 0 ? (
+                  <EmptyState
+                    icon={<Wallet size={24} color={colors.faint} />}
+                    title="Ödəniş yoxdur"
+                    sub="Bu qaimə üzrə hələ ödəniş edilməyib."
+                  />
+                ) : (
+                  <View className="gap-2.5">
+                    {payments.map((p) => (
+                      <Card key={p.id} className="flex-row items-center gap-3 p-3.5">
+                        <View className="h-[42px] w-[42px] items-center justify-center rounded-xl bg-bg-sunk">
+                          <Wallet size={20} color={colors.green} />
+                        </View>
+                        <View className="min-w-0 flex-1">
+                          <Text className="font-bold text-[15px] text-green">{azn(p.amount, 0)}</Text>
+                          <Text numberOfLines={1} className="mt-0.5 text-xs text-muted">
+                            {[azDate(p.paymentDate), p.note].filter(Boolean).join(' · ')}
+                          </Text>
+                        </View>
+                      </Card>
+                    ))}
+                  </View>
+                )}
+              </View>
             </>
           )}
         </View>
